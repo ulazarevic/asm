@@ -17,7 +17,7 @@ def write_to_file(root, filename):
 def read_file(fileName,rangeEnd, columnName, columnYear, collabGraph, professorsDict):
     professors_papers = openpyxl.load_workbook(os.path.join(fileName))
     papersSheet = professors_papers.active
-    print('Papers file reading...')
+    print(fileName + ' file reading...')
     for i in range(2, rangeEnd):
         authors = cyrtranslit.to_latin(papersSheet[columnName + str(i)].value)
         try:
@@ -32,20 +32,18 @@ def read_file(fileName,rangeEnd, columnName, columnYear, collabGraph, professors
         for char in removableChars:
             authors = authors.replace(char,'')
         authors = authors.split(',')
-        allNative = True
+        #allNative = True
+        authorsCopy = [i for i in authors]
         for author in authors:
             if not (author in professorsDict):
-                allNative = False
-                break
-        if allNative:
-            for i in range(0, len(authors)):
-                for j in range(i + 1, len(authors)):
-                    m = professorsDict[authors[i]]['id']
-                    n = professorsDict[authors[j]]['id']
-                    if m == 156 and n == 178:
-                        print('tu sam')
-                    collabGraph[m][n] = collabGraph[m][n] + 1
-                    collabGraph[n][m] = collabGraph[n][m] + 1
+                authorsCopy.remove(author)
+        authors = authorsCopy
+        for i in range(0, len(authors)):
+            for j in range(i + 1, len(authors)):
+                m = professorsDict[authors[i]]['id']
+                n = professorsDict[authors[j]]['id']
+                collabGraph[m][n] = collabGraph[m][n] + 1
+                collabGraph[n][m] = collabGraph[n][m] + 1
 
 
 gexf = etree.Element('gexf', xmlns ='http://www.gexf.net/1.2draft', version='1.2')
@@ -75,13 +73,11 @@ for i in range (2, 254):
 
 collabGraph = numpy.zeros(shape = (253, 253))
 
-print(collabGraph[156][178])
 read_file(consts.PROFESSORS_NATIVE_PATH, 844,'M', 'L', collabGraph, professorsDict)
-print(collabGraph[156][178])
 read_file(consts.PROFESSORS_PAPERS_PATH, 2317, 'B', 'H', collabGraph, professorsDict)
-print(collabGraph[156][178])
 read_file(consts.PROFESSORS_INTERNATIONAL_PATH, 887, 'M', 'L', collabGraph, professorsDict)
-print(collabGraph[156][178])
+
+
 
 write_to_file(gexf,'gephidata.gexf')
 
